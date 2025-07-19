@@ -22,27 +22,53 @@ class API_Connector {
             'timeout' => 60,
         ];
 
+        error_log( '[luxbg] Sending request to PhotoRoom' );
+
         $response = wp_remote_post( $this->endpoint, $args );
+
         if ( is_wp_error( $response ) ) {
-            return $response;
+            error_log( '[luxbg] Request error: ' . $response->get_error_message() );
+            return new \WP_Error( 'luxbg_request_error', $response->get_error_message() );
         }
-        $body = wp_remote_retrieve_body( $response );
+
+        $status = wp_remote_retrieve_response_code( $response );
+        $body   = wp_remote_retrieve_body( $response );
+
+        error_log( '[luxbg] Response code: ' . $status );
+        error_log( '[luxbg] Response body: ' . $body );
+
+        if ( empty( $body ) ) {
+            return new \WP_Error( 'luxbg_empty_response', 'Resposta vazia da API' );
+        }
+
         $data = json_decode( $body, true );
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            return new \WP_Error( 'luxbg_invalid_format', 'Formato inválido' );
+        }
+
+        if ( $status === 403 ) {
+            return new \WP_Error( 'luxbg_http_403', 'Erro 403' );
+        }
 
         // Handle API errors first
         if ( isset( $data['error'] ) ) {
+            if ( stripos( $data['error'], 'prompt' ) !== false ) {
+                return new \WP_Error( 'luxbg_prompt_rejected', $data['error'] );
+            }
             return new \WP_Error( 'luxbg_api_error', $data['error'] );
         }
 
         // The API can return the image in different fields
-        $b64  = $data['image_b64'] ?? $data['image_base64'] ?? '';
+        $b64 = $data['image_b64'] ?? $data['image_base64'] ?? '';
         if ( ! empty( $b64 ) ) {
             return base64_decode( $b64 );
         }
 
         if ( ! empty( $data['result_url'] ) ) {
+            error_log( '[luxbg] Fetching result url: ' . $data['result_url'] );
             $img_response = wp_remote_get( esc_url_raw( $data['result_url'] ) );
             if ( is_wp_error( $img_response ) ) {
+                error_log( '[luxbg] Error fetching result url: ' . $img_response->get_error_message() );
                 return $img_response;
             }
             return wp_remote_retrieve_body( $img_response );
