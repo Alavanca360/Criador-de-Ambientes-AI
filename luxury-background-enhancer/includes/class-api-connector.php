@@ -28,9 +28,26 @@ class API_Connector {
         }
         $body = wp_remote_retrieve_body( $response );
         $data = json_decode( $body, true );
-        if ( empty( $data['image_b64'] ) ) {
-            return new \WP_Error( 'luxbg_no_image', 'No image returned from API' );
+
+        // Handle API errors first
+        if ( isset( $data['error'] ) ) {
+            return new \WP_Error( 'luxbg_api_error', $data['error'] );
         }
-        return base64_decode( $data['image_b64'] );
+
+        // The API can return the image in different fields
+        $b64  = $data['image_b64'] ?? $data['image_base64'] ?? '';
+        if ( ! empty( $b64 ) ) {
+            return base64_decode( $b64 );
+        }
+
+        if ( ! empty( $data['result_url'] ) ) {
+            $img_response = wp_remote_get( esc_url_raw( $data['result_url'] ) );
+            if ( is_wp_error( $img_response ) ) {
+                return $img_response;
+            }
+            return wp_remote_retrieve_body( $img_response );
+        }
+
+        return new \WP_Error( 'luxbg_no_image', 'No image returned from API' );
     }
 }
