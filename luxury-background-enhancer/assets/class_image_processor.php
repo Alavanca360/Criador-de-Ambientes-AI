@@ -61,7 +61,7 @@ class LUXBG_Image_Processor {
             wp_send_json_error('Produto sem imagem destacada.');
         }
 
-        require_once LUXBG_PLUGIN_PATH . 'includes/class-api-connector.php';
+        require_once LUXBG_PLUGIN_DIR . 'includes/class-api-connector.php';
         $new_image_url = LUXBG_API_Connector::generate_image($image_url, $style);
 
         if (!$new_image_url) {
