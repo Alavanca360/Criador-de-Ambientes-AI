@@ -17,8 +17,11 @@ class API_Connector {
      * evitar erros do tipo "Please provide an image".
      */
     public function generate_luxury_image( $image_url, $prompt = 'luxury interior' ) {
+        if ( empty( $this->api_key ) ) {
+
         $api_key = get_option( 'luxbg_api_key' );
         if ( ! $api_key ) {
+ main
             return new \WP_Error( 'missing_api_key', 'API Key não configurada.' );
         }
 
@@ -27,7 +30,10 @@ class API_Connector {
             $image_url = 'https://images.unsplash.com/photo-1683009427619-a1a11b799e05';
         }
 
+        $endpoint = $this->endpoint;
+
         $endpoint = 'https://sdk.photoroom.com/v1/replace';
+ main
 
         $body = json_encode([
             'image_url'  => $image_url,
@@ -37,6 +43,7 @@ class API_Connector {
         $response = wp_remote_post( $endpoint, [
             'headers' => [
                 'Content-Type' => 'application/json',
+                'x-api-key'    => $this->api_key,
                 'x-api-key'    => $api_key,
             ],
             'body'    => $body,
