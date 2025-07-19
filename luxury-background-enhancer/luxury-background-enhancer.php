@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'LUXBG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LUXBG_PLUGIN_FILE', __FILE__ );
 define( 'LUXBG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+=======
 
 // Include required classes.
 require_once LUXBG_PLUGIN_DIR . 'includes/class-image-processor.php';
