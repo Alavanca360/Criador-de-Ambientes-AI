@@ -15,6 +15,8 @@ class Admin_Panel {
         add_action( 'admin_post_luxbg_generate', [ $this, 'handle_generation' ] );
         add_action( 'admin_post_luxbg_fix_images', [ $this, 'handle_fix_images' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+        add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
+        add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_filter( 'manage_product_posts_columns', [ $this, 'add_status_column' ] );
         add_action( 'manage_product_posts_custom_column', [ $this, 'render_status_column' ], 10, 2 );
     }
@@ -195,5 +197,23 @@ class Admin_Panel {
             }
             echo esc_html( $status );
         }
+    }
+
+    public function add_settings_page() {
+        add_options_page(
+            'Criador de Ambientes AI',
+            'Criador de Ambientes AI',
+            'manage_options',
+            'luxbg-settings',
+            [ $this, 'render_settings_page' ]
+        );
+    }
+
+    public function register_settings() {
+        register_setting( 'luxbg_settings', 'luxbg_api_key' );
+    }
+
+    public function render_settings_page() {
+        include LUXBG_PLUGIN_DIR . 'templates/admin-settings.php';
     }
 }
