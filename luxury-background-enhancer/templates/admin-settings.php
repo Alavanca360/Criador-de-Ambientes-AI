@@ -14,5 +14,28 @@
         <?php submit_button( 'Salvar', 'primary luxbg-green' ); ?>
         <?php submit_button(); ?>
     </form>
+    <h2>Logs de Erro Recentes</h2>
+    <?php if ( ! empty( $logs ) ) : ?>
+    <table class="widefat">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Contexto</th>
+                <th>Mensagem</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ( array_reverse( $logs ) as $log ) : ?>
+            <tr>
+                <td><?php echo esc_html( $log['time'] ); ?></td>
+                <td><?php echo esc_html( $log['context'] ); ?></td>
+                <td><?php echo esc_html( $log['message'] ); ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php else : ?>
+    <p>Nenhum erro registrado.</p>
+    <?php endif; ?>
 </div>
 </div>
