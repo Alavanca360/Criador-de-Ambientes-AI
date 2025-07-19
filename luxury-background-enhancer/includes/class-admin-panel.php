@@ -14,6 +14,7 @@ class Admin_Panel {
         add_action( 'add_meta_boxes', [ $this, 'register_meta_box' ] );
         add_action( 'admin_post_luxbg_generate', [ $this, 'handle_generation' ] );
         add_action( 'admin_post_luxbg_fix_images', [ $this, 'handle_fix_images' ] );
+        add_action( 'wp_ajax_luxbg_generate_ajax', [ $this, 'handle_generation_ajax' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
@@ -55,9 +56,8 @@ class Admin_Panel {
                 <textarea name="luxbg_prompt" id="luxbg_prompt" rows="3"></textarea>
             </p>
             <p>
-                <input type="hidden" name="action" value="luxbg_generate" />
-                <input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
-                <?php submit_button( 'Gerar Fundo', 'primary', 'submit', false ); ?>
+                <input type="hidden" name="post_id" id="luxbg_post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+                <button type="button" id="luxbg-generate-button" class="button button-primary" data-post="<?php echo esc_attr( $post->ID ); ?>">Gerar Fundo</button>
             </p>
         </form>
         <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -126,6 +126,61 @@ class Admin_Panel {
         exit;
     }
 
+    public function handle_generation_ajax() {
+        check_ajax_referer( 'luxbg_generate', '_ajax_nonce' );
+
+        if ( ! current_user_can( 'edit_products' ) ) {
+            wp_send_json_error( 'Sem permissões' );
+        }
+
+        $product_id = absint( $_POST['post_id'] ?? 0 );
+        $style      = sanitize_text_field( $_POST['style'] ?? '' );
+        $prompt     = sanitize_text_field( $_POST['prompt'] ?? '' );
+
+        $this->status_tracker->set_status( $product_id, 'Processando' );
+
+        $thumbnail_id = get_post_thumbnail_id( $product_id );
+        $image_path   = get_attached_file( $thumbnail_id );
+
+        if ( ! $this->image_processor->is_white_background( $image_path ) ) {
+            $this->status_tracker->set_status( $product_id, 'Rejeitado - fundo não branco' );
+            wp_send_json_error( 'Fundo não branco' );
+        }
+
+        $generated = $this->api_connector->generate_image( $image_path, $prompt ?: $style );
+        if ( is_wp_error( $generated ) ) {
+            $this->status_tracker->set_status( $product_id, 'Erro' );
+            wp_send_json_error( 'Erro na API' );
+        }
+
+        $upload = wp_upload_bits( 'luxbg-' . uniqid() . '.jpg', null, $generated );
+        if ( ! empty( $upload['error'] ) ) {
+            $this->status_tracker->set_status( $product_id, 'Erro upload' );
+            wp_send_json_error( 'Erro upload' );
+        }
+
+        $attachment = [
+            'post_mime_type' => 'image/jpeg',
+            'post_title'     => 'LuxBG ' . $product_id,
+            'post_content'   => '',
+            'post_status'    => 'inherit',
+        ];
+        $attach_id = wp_insert_attachment( $attachment, $upload['file'], $product_id );
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
+        wp_update_attachment_metadata( $attach_id, $attach_data );
+
+        $this->image_processor->resize_image( $attach_id );
+        $this->status_tracker->save_generated_image( $product_id, $attach_id );
+
+        add_post_meta( $product_id, '_product_image_gallery', $thumbnail_id );
+        set_post_thumbnail( $product_id, $attach_id );
+
+        $this->status_tracker->set_status( $product_id, 'Processado' );
+
+        wp_send_json_success();
+    }
+
     public function handle_fix_images() {
         if ( ! current_user_can( 'edit_products' ) ) {
             wp_die( 'Sem permissões' );
@@ -182,6 +237,13 @@ class Admin_Panel {
 
     public function enqueue_assets() {
         wp_enqueue_style( 'luxbg-admin', LUXBG_PLUGIN_URL . 'assets/style.css' );
+
+        wp_enqueue_script( 'luxbg-admin', LUXBG_PLUGIN_URL . 'assets/admin.js', [ 'jquery' ], null, true );
+
+        wp_localize_script( 'luxbg-admin', 'luxbg_ajax', [
+            'url'   => admin_url( 'admin-ajax.php' ),
+            'nonce' => wp_create_nonce( 'luxbg_generate' ),
+        ] );
     }
 
     public function add_status_column( $columns ) {
