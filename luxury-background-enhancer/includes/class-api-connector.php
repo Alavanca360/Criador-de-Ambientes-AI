@@ -18,6 +18,10 @@ class API_Connector {
      */
     public function generate_luxury_image( $image_url, $prompt = 'luxury interior' ) {
         if ( empty( $this->api_key ) ) {
+
+        $api_key = get_option( 'luxbg_api_key' );
+        if ( ! $api_key ) {
+ main
             return new \WP_Error( 'missing_api_key', 'API Key não configurada.' );
         }
 
@@ -28,6 +32,9 @@ class API_Connector {
 
         $endpoint = $this->endpoint;
 
+        $endpoint = 'https://sdk.photoroom.com/v1/replace';
+ main
+
         $body = json_encode([
             'image_url'  => $image_url,
             'background' => $prompt,
@@ -37,6 +44,7 @@ class API_Connector {
             'headers' => [
                 'Content-Type' => 'application/json',
                 'x-api-key'    => $this->api_key,
+                'x-api-key'    => $api_key,
             ],
             'body'    => $body,
             'timeout' => 60,
