@@ -181,6 +181,8 @@ class Admin_Panel {
     }
 
     public function enqueue_assets() {
+        wp_enqueue_style( 'luxbg-admin', LUXBG_PLUGIN_URL . 'assets/style.css' );
+=======
         wp_enqueue_style( 'luxbg-admin', plugins_url( '../assets/style.css', __FILE__ ) );
     }
 

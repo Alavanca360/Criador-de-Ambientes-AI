@@ -1,3 +1,6 @@
+<div class="wrap luxbg-settings-page">
+    <h1>Criador de Ambientes AI</h1>
+    <p>Insira sua chave de API da PhotoRoom. Se ainda não possui, <a href="https://photoroom.com/api" target="_blank">clique aqui para gerar a sua</a>.</p>
 <div class="wrap">
     <h2>Criador de Ambientes AI</h2>
     <form method="post" action="options.php">
@@ -8,6 +11,7 @@
                 <td><input type="text" name="luxbg_api_key" id="luxbg_api_key" value="<?php echo esc_attr( get_option( 'luxbg_api_key' ) ); ?>" class="regular-text" /></td>
             </tr>
         </table>
+        <?php submit_button( 'Salvar', 'primary luxbg-green' ); ?>
         <?php submit_button(); ?>
     </form>
 </div>
