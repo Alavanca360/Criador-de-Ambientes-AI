@@ -5,11 +5,13 @@ class Admin_Panel {
     private $image_processor;
     private $api_connector;
     private $status_tracker;
+    private $error_logger;
 
     public function __construct() {
         $this->image_processor = new Image_Processor();
         $this->api_connector   = new API_Connector();
         $this->status_tracker  = new Status_Tracker();
+        $this->error_logger    = new Error_Logger();
 
         add_action( 'add_meta_boxes', [ $this, 'register_meta_box' ] );
         add_action( 'admin_post_luxbg_generate', [ $this, 'handle_generation' ] );
@@ -85,6 +87,7 @@ class Admin_Panel {
 
         if ( ! $this->image_processor->is_white_background( $image_path ) ) {
             $this->status_tracker->set_status( $product_id, 'Rejeitado - fundo não branco' );
+            $this->error_logger->log( 'background_check', 'Imagem sem fundo branco: ' . $image_path );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -92,6 +95,7 @@ class Admin_Panel {
         $generated = $this->api_connector->generate_image( $image_path, $prompt ?: $style );
         if ( is_wp_error( $generated ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
+            $this->error_logger->log( 'api_generate', $generated->get_error_message() );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -99,6 +103,7 @@ class Admin_Panel {
         $upload = wp_upload_bits( 'luxbg-' . uniqid() . '.jpg', null, $generated );
         if ( ! empty( $upload['error'] ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro upload' );
+            $this->error_logger->log( 'upload', $upload['error'] );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -144,18 +149,21 @@ class Admin_Panel {
 
         if ( ! $this->image_processor->is_white_background( $image_path ) ) {
             $this->status_tracker->set_status( $product_id, 'Rejeitado - fundo não branco' );
+            $this->error_logger->log( 'background_check', 'Imagem sem fundo branco: ' . $image_path );
             wp_send_json_error( 'Fundo não branco' );
         }
 
         $generated = $this->api_connector->generate_image( $image_path, $prompt ?: $style );
         if ( is_wp_error( $generated ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
+            $this->error_logger->log( 'api_generate', $generated->get_error_message() );
             wp_send_json_error( 'Erro na API' );
         }
 
         $upload = wp_upload_bits( 'luxbg-' . uniqid() . '.jpg', null, $generated );
         if ( ! empty( $upload['error'] ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro upload' );
+            $this->error_logger->log( 'upload', $upload['error'] );
             wp_send_json_error( 'Erro upload' );
         }
 
@@ -196,6 +204,7 @@ class Admin_Panel {
         $path   = get_attached_file( $thumbnail_id );
         $editor = wp_get_image_editor( $path );
         if ( is_wp_error( $editor ) ) {
+            $this->error_logger->log( 'image_editor', $editor->get_error_message() );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -213,6 +222,7 @@ class Admin_Panel {
         $editor->resize( 1024, 423, true );
         $saved = $editor->save( $new_path );
         if ( is_wp_error( $saved ) ) {
+            $this->error_logger->log( 'save_image', $saved->get_error_message() );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -276,6 +286,7 @@ class Admin_Panel {
     }
 
     public function render_settings_page() {
+        $logs = $this->error_logger->get_logs();
         include LUXBG_PLUGIN_DIR . 'templates/admin-settings.php';
     }
 }

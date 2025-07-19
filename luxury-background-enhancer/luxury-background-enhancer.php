@@ -21,6 +21,7 @@ require_once LUXBG_PLUGIN_DIR . 'includes/class-image-processor.php';
 require_once LUXBG_PLUGIN_DIR . 'includes/class-api-connector.php';
 require_once LUXBG_PLUGIN_DIR . 'includes/class-admin-panel.php';
 require_once LUXBG_PLUGIN_DIR . 'includes/class-status-tracker.php';
+require_once LUXBG_PLUGIN_DIR . 'includes/class-error-logger.php';
 
 // Initialize the plugin.
 function luxbg_init_plugin() {
