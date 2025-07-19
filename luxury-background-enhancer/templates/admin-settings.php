@@ -15,3 +15,4 @@
         <?php submit_button(); ?>
     </form>
 </div>
+</div>

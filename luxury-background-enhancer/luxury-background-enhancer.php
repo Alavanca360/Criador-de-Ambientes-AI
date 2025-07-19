@@ -28,5 +28,3 @@ function luxbg_init_plugin() {
 }
 add_action( 'plugins_loaded', 'luxbg_init_plugin' );
 
-require_once LUXBG_PLUGIN_PATH . 'includes/class-image-processor.php';
-require_once LUXBG_PLUGIN_PATH . 'includes/class-api-connector.php';
