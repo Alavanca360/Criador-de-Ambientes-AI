@@ -102,6 +102,8 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+        } else {
+            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
@@ -184,6 +186,8 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+        } else {
+            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
