@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: Luxury Background Enhancer
+ * Plugin Name: Criador de Ambientes AI – Alavanca360
  * Description: Gera fundos de luxo para produtos usando a API PhotoRoom.
  * Version: 0.1.0
  * Author: Alavanca360
- * Text Domain: luxury-background-enhancer
- */
+ * Text Domain: criador-de-ambientes-ai
+*/
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.

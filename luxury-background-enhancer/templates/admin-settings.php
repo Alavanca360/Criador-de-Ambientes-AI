@@ -1,5 +1,5 @@
 <div class="wrap">
-    <h2>Luxury Background Enhancer</h2>
+    <h2>Criador de Ambientes AI</h2>
     <form method="post" action="options.php">
         <?php settings_fields( 'luxbg_settings' ); ?>
         <table class="form-table">
