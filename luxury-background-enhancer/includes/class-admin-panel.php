@@ -102,6 +102,11 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+ vx2iej-codex/add-comprehensive-error-handling-to-plugin
+        } else {
+            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
+
+ main
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
@@ -184,6 +189,11 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+ vx2iej-codex/add-comprehensive-error-handling-to-plugin
+        } else {
+            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
+
+ main
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
@@ -351,9 +361,24 @@ class Admin_Panel {
             'luxbg_prompt_rejected'=> 'Prompt não aceito.',
             'luxbg_api_error'      => 'Erro ao gerar imagem.',
             'luxbg_no_image'       => 'Imagem não encontrada na resposta.',
+vx2iej-codex/add-comprehensive-error-handling-to-plugin
+            'luxbg_no_api_key'     => 'Chave da API não configurada.',
+            'upload_error'         => 'Erro ao salvar imagem.',
+        ];
+        if ( isset( $map[ $code ] ) ) {
+            return $map[ $code ];
+        }
+
+        if ( strpos( $code, 'luxbg_http_' ) === 0 ) {
+            $status = str_replace( 'luxbg_http_', '', $code );
+            return 'Erro ' . $status . ' ao se comunicar com a API.';
+        }
+
+        return 'Erro desconhecido';
             'upload_error'         => 'Erro ao salvar imagem.',
         ];
         return $map[ $code ] ?? 'Erro desconhecido';
+main
     }
 
     public function display_notices() {
