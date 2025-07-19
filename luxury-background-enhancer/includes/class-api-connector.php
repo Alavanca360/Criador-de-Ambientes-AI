@@ -85,7 +85,7 @@ class API_Connector {
                 'Content-Type' => 'application/json',
             ],
             'body' => wp_json_encode([
-                'image_url' => 'https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?auto=format&w=600',
+                'image_url' => 'https://images.unsplash.com/photo-1683009427619-a1a11b799e05?auto=format&w=600',
                 'prompt'    => 'luxury interior',
             ]),
             'timeout' => 60,
