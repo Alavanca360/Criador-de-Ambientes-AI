@@ -1,0 +1,29 @@
+#luxbg-meta-box textarea {
+    width: 100%;
+}
+
+.luxbg-settings-page {
+    background: #ebe6d6;
+    padding: 20px;
+    max-width: 650px;
+    border-radius: 8px;
+}
+
+.luxbg-settings-page h1 {
+    color: #4b615a; /* Fendi green */
+}
+
+.luxbg-settings-page a {
+    color: #4b615a;
+    text-decoration: underline;
+}
+
+.luxbg-green.button-primary {
+    background-color: #4b615a;
+    border-color: #4b615a;
+}
+
+.luxbg-green.button-primary:hover {
+    background-color: #5f7e5b;
+    border-color: #5f7e5b;
+}

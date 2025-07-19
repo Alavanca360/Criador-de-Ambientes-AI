@@ -1,0 +1,39 @@
+<?php
+namespace LuxuryBg;
+
+class Image_Processor {
+    public function is_white_background( $image_path ) {
+        $im = imagecreatefromstring( file_get_contents( $image_path ) );
+        if ( ! $im ) {
+            return false;
+        }
+        $width  = imagesx( $im );
+        $height = imagesy( $im );
+        $corners = [
+            imagecolorat( $im, 0, 0 ),
+            imagecolorat( $im, $width - 1, 0 ),
+            imagecolorat( $im, 0, $height - 1 ),
+            imagecolorat( $im, $width - 1, $height - 1 ),
+        ];
+        foreach ( $corners as $color ) {
+            $rgb = imagecolorsforindex( $im, $color );
+            if ( $rgb['red'] < 240 || $rgb['green'] < 240 || $rgb['blue'] < 240 ) {
+                imagedestroy( $im );
+                return false;
+            }
+        }
+        imagedestroy( $im );
+        return true;
+    }
+
+    public function resize_image( $attachment_id ) {
+        $path = get_attached_file( $attachment_id );
+        $editor = wp_get_image_editor( $path );
+        if ( is_wp_error( $editor ) ) {
+            return $attachment_id;
+        }
+        $editor->resize( 1024, 423, true );
+        $editor->save( $path );
+        return $attachment_id;
+    }
+}
