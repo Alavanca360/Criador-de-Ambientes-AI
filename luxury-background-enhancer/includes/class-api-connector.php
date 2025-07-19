@@ -22,17 +22,8 @@ class API_Connector {
             'timeout' => 60,
         ];
 
-        if ( empty( $this->api_key ) ) {
-            return new \WP_Error( 'luxbg_no_api_key', 'API key not set' );
-        }
 
-        error_log( '[luxbg] Sending request to PhotoRoom' );
-
-        $response = wp_remote_post( $this->endpoint, $args );
-
-        if ( is_wp_error( $response ) ) {
-            error_log( '[luxbg] Request error: ' . $response->get_error_message() );
-            return new \WP_Error( 'luxbg_request_error', $response->get_error_message() );
+ vx2iej-codex/add-comprehensive-error-handling-to-plugin
         }
 
         $status = wp_remote_retrieve_response_code( $response );
@@ -50,6 +41,20 @@ class API_Connector {
             return new \WP_Error( 'luxbg_empty_response', 'Resposta vazia da API' );
         }
 
+
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        $body   = wp_remote_retrieve_body( $response );
+
+        error_log( '[luxbg] Response code: ' . $status );
+        error_log( '[luxbg] Response body: ' . $body );
+
+        if ( empty( $body ) ) {
+            return new \WP_Error( 'luxbg_empty_response', 'Resposta vazia da API' );
+        }
+
+ main
         $data = json_decode( $body, true );
         if ( json_last_error() !== JSON_ERROR_NONE ) {
             return new \WP_Error( 'luxbg_invalid_format', 'Formato inválido' );
@@ -74,9 +79,14 @@ class API_Connector {
         }
 
         if ( ! empty( $data['result_url'] ) ) {
+vx2iej-codex/add-comprehensive-error-handling-to-plugin
             $url          = esc_url_raw( $data['result_url'] );
             error_log( '[luxbg] Fetching result url: ' . $url );
             $img_response = wp_remote_get( $url );
+
+            error_log( '[luxbg] Fetching result url: ' . $data['result_url'] );
+            $img_response = wp_remote_get( esc_url_raw( $data['result_url'] ) );
+ main
             if ( is_wp_error( $img_response ) ) {
                 error_log( '[luxbg] Error fetching result url: ' . $img_response->get_error_message() );
                 return $img_response;
