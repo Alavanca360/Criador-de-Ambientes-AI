@@ -23,6 +23,7 @@ class Admin_Panel {
         add_filter( 'manage_product_posts_columns', [ $this, 'add_status_column' ] );
         add_action( 'manage_product_posts_custom_column', [ $this, 'render_status_column' ], 10, 2 );
         add_action( 'admin_notices', [ $this, 'display_notices' ] );
+        add_action( 'wp_ajax_luxbg_test_api', [ $this, 'ajax_test_api' ] );
     }
 
     public function register_meta_box() {
@@ -102,11 +103,8 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
- vx2iej-codex/add-comprehensive-error-handling-to-plugin
         } else {
             error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
-
- main
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
@@ -189,11 +187,8 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
- vx2iej-codex/add-comprehensive-error-handling-to-plugin
         } else {
             error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
-
- main
         }
         if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
@@ -304,9 +299,16 @@ class Admin_Panel {
 
         wp_enqueue_script( 'luxbg-admin', LUXBG_PLUGIN_URL . 'assets/admin.js', [ 'jquery' ], null, true );
 
+        wp_enqueue_script( 'luxbg-admin-ui', LUXBG_PLUGIN_URL . 'assets/admin_ui.js', [ 'jquery' ], null, true );
+
         wp_localize_script( 'luxbg-admin', 'luxbg_ajax', [
             'url'   => admin_url( 'admin-ajax.php' ),
             'nonce' => wp_create_nonce( 'luxbg_generate' ),
+        ] );
+
+        wp_localize_script( 'luxbg-admin-ui', 'luxbg_admin_ui', [
+            'ajax_url'   => admin_url( 'admin-ajax.php' ),
+            'test_nonce' => wp_create_nonce( 'luxbg_test_api' ),
         ] );
     }
 
@@ -361,7 +363,6 @@ class Admin_Panel {
             'luxbg_prompt_rejected'=> 'Prompt não aceito.',
             'luxbg_api_error'      => 'Erro ao gerar imagem.',
             'luxbg_no_image'       => 'Imagem não encontrada na resposta.',
-vx2iej-codex/add-comprehensive-error-handling-to-plugin
             'luxbg_no_api_key'     => 'Chave da API não configurada.',
             'upload_error'         => 'Erro ao salvar imagem.',
         ];
@@ -375,10 +376,6 @@ vx2iej-codex/add-comprehensive-error-handling-to-plugin
         }
 
         return 'Erro desconhecido';
-            'upload_error'         => 'Erro ao salvar imagem.',
-        ];
-        return $map[ $code ] ?? 'Erro desconhecido';
-main
     }
 
     public function display_notices() {
@@ -388,5 +385,23 @@ main
         $code = sanitize_text_field( wp_unslash( $_GET['luxbg_msg'] ) );
         $message = $this->friendly_message( $code );
         echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
+    }
+
+    public function ajax_test_api() {
+        check_ajax_referer( 'luxbg_test_api', '_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Sem permissões' );
+        }
+
+        $result = $this->api_connector->test_connection();
+
+        if ( is_wp_error( $result ) ) {
+            $this->error_logger->log( 'test_api', $result->get_error_message() );
+            wp_send_json_error( $result->get_error_message() );
+        }
+
+        $this->error_logger->log( 'test_api', 'success' );
+        wp_send_json_success( $result );
     }
 }
