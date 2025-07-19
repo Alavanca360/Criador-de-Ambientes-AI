@@ -1,32 +1,19 @@
-jQuery(document).ready(function($) {
-  $('#luxbg-generate').on('click', function(e) {
+jQuery(document).ready(function($){
+  $('#luxbg-test-api').on('click', function(e){
     e.preventDefault();
-
-    const product_id = $('#post_ID').val();
-    const style = $('#luxbg_style').val();
-    const status = $('#luxbg-status');
-
-    status.text('Gerando imagem com fundo luxuoso...').css('color', '#666');
-
-    $.ajax({
-      url: luxbg_ajax.ajax_url,
-      method: 'POST',
-      data: {
-        action: 'luxbg_generate_background',
-        nonce: luxbg_ajax.nonce,
-        product_id: product_id,
-        style: style
-      },
-      success: function(response) {
-        if (response.success) {
-          status.html('<strong style="color:green">Imagem gerada com sucesso!</strong>');
-        } else {
-          status.html('<strong style="color:red">Erro: ' + response.data + '</strong>');
-        }
-      },
-      error: function(xhr, statusText, errorThrown) {
-        status.html('<strong style="color:red">Erro inesperado: ' + errorThrown + '</strong>');
+    var result = $('#luxbg-test-result');
+    result.text('Testando...');
+    $.post(luxbg_admin_ui.ajax_url, {
+      action: 'luxbg_test_api',
+      _ajax_nonce: luxbg_admin_ui.test_nonce
+    }).done(function(resp){
+      if(resp && resp.success){
+        result.text('✅ Conexão bem-sucedida');
+      }else{
+        result.text('❌ Erro: ' + (resp && resp.data ? resp.data : 'desconhecido'));
       }
+    }).fail(function(){
+      result.text('❌ Erro inesperado');
     });
   });
 });

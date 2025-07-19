@@ -13,6 +13,10 @@
         </table>
         <?php submit_button( 'Salvar', 'primary luxbg-green' ); ?>
         <?php submit_button(); ?>
+        <p>
+            <button type="button" class="button" id="luxbg-test-api">Testar Conexão com a API do PhotoRoom</button>
+            <span id="luxbg-test-result" style="margin-left:10px;"></span>
+        </p>
     </form>
     <h2>Logs de Erro Recentes</h2>
     <?php if ( ! empty( $logs ) ) : ?>
