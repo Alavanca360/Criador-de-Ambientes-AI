@@ -61,14 +61,55 @@ class LUXBG_Image_Processor {
             wp_send_json_error('Produto sem imagem destacada.');
         }
 
-        // Aqui chamaremos futuramente o conector da API
-        $new_image_url = apply_filters('luxbg_generate_image', $image_url, $style);
+        require_once LUXBG_PLUGIN_PATH . 'includes/class-api-connector.php';
+        $new_image_url = LUXBG_API_Connector::generate_image($image_url, $style);
 
         if (!$new_image_url) {
             wp_send_json_error('Erro ao gerar nova imagem.');
         }
 
-        // Baixar, redimensionar e substituir virá depois
-        wp_send_json_success(array('nova_imagem' => $new_image_url));
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+
+        $tmp = download_url($new_image_url);
+        if (is_wp_error($tmp)) {
+            wp_send_json_error('Erro ao baixar a imagem gerada.');
+        }
+
+        $filename = 'luxbg-' . time() . '.jpg';
+        $file_array = array(
+            'name'     => $filename,
+            'tmp_name' => $tmp
+        );
+
+        $attachment_id = media_handle_sideload($file_array, $product_id);
+
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            wp_send_json_error('Erro ao salvar a imagem no WordPress.');
+        }
+
+        $editor = wp_get_image_editor(get_attached_file($attachment_id));
+        if (!is_wp_error($editor)) {
+            $editor->resize(1024, 423, true);
+            $editor->save(get_attached_file($attachment_id));
+        }
+
+        $old_thumb_id = get_post_thumbnail_id($product_id);
+        if ($old_thumb_id) {
+            $gallery = get_post_meta($product_id, '_product_image_gallery', true);
+            $gallery_ids = $gallery ? explode(',', $gallery) : [];
+            if (!in_array($old_thumb_id, $gallery_ids)) {
+                $gallery_ids[] = $old_thumb_id;
+                update_post_meta($product_id, '_product_image_gallery', implode(',', $gallery_ids));
+            }
+        }
+
+        set_post_thumbnail($product_id, $attachment_id);
+
+        wp_send_json_success(array(
+            'nova_imagem' => wp_get_attachment_url($attachment_id)
+        ));
     }
 }
