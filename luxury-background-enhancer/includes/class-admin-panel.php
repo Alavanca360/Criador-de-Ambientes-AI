@@ -118,7 +118,7 @@ class Admin_Panel {
             $this->redirect_with_message( $product_id, 'image_private' );
         }
 
-        $generated = $this->api_connector->generate_image( $image_path, $prompt ?: $style );
+        $generated = $this->api_connector->generate_luxury_image( $image_url, $prompt ?: $style );
         if ( is_wp_error( $generated ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
             $this->error_logger->log( 'api_generate', $generated->get_error_message() );
@@ -202,7 +202,7 @@ class Admin_Panel {
             wp_send_json_error( $this->friendly_message( 'image_private' ) );
         }
 
-        $generated = $this->api_connector->generate_image( $image_path, $prompt ?: $style );
+        $generated = $this->api_connector->generate_luxury_image( $image_url, $prompt ?: $style );
         if ( is_wp_error( $generated ) ) {
             $this->status_tracker->set_status( $product_id, 'Erro' );
             $this->error_logger->log( 'api_generate', $generated->get_error_message() );
