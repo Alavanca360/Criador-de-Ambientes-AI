@@ -2,8 +2,8 @@
 namespace LuxuryBg;
 
 class API_Connector {
-    // Endpoint antigo que utilizava o envio da imagem em base64. Mantido por
-    // compatibilidade, mas o novo fluxo utiliza o endpoint /v1/replace via URL.
+    // Endpoint antigo que utilizava o envio da imagem em base64. Mantido por compatibilidade
+    // mas o novo fluxo utiliza o endpoint /v1/replace via URL.
     private $endpoint = 'https://sdk.photoroom.com/v1/replace';
     private $api_key;
 
@@ -15,36 +15,29 @@ class API_Connector {
      * Envia a imagem para o PhotoRoom utilizando o endpoint /v1/replace.
      * Utiliza a URL da imagem em vez de enviar o arquivo em base64 para
      * evitar erros do tipo "Please provide an image".
+     *
+     * @param string $image_url URL da imagem original
+     * @param string $prompt    Prompt do background
+     * @return string|\WP_Error  Dados binários da imagem ou erro
      */
     public function generate_luxury_image( $image_url, $prompt = 'luxury interior' ) {
         if ( empty( $this->api_key ) ) {
-
-        $api_key = get_option( 'luxbg_api_key' );
-        if ( ! $api_key ) {
- main
-            return new \WP_Error( 'missing_api_key', 'API Key não configurada.' );
+            return new \WP_Error( 'luxbg_no_api_key', 'Chave da API não configurada.' );
         }
 
-        // Substitui a imagem por uma pública caso a enviada seja nula
         if ( empty( $image_url ) ) {
             $image_url = 'https://images.unsplash.com/photo-1683009427619-a1a11b799e05';
         }
 
-        $endpoint = $this->endpoint;
-
-        $endpoint = 'https://sdk.photoroom.com/v1/replace';
- main
-
-        $body = json_encode([
+        $body = wp_json_encode([
             'image_url'  => $image_url,
             'background' => $prompt,
         ]);
 
-        $response = wp_remote_post( $endpoint, [
+        $response = wp_remote_post( $this->endpoint, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'x-api-key'    => $this->api_key,
-                'x-api-key'    => $api_key,
             ],
             'body'    => $body,
             'timeout' => 60,
@@ -52,23 +45,58 @@ class API_Connector {
 
         if ( is_wp_error( $response ) ) {
             error_log( '[PhotoRoom API] Erro de conexão: ' . $response->get_error_message() );
-            return new \WP_Error( 'api_connection_error', $response->get_error_message() );
+            return new \WP_Error( 'luxbg_request_error', $response->get_error_message() );
         }
 
-        $code = wp_remote_retrieve_response_code( $response );
-        $body = wp_remote_retrieve_body( $response );
+        $status   = wp_remote_retrieve_response_code( $response );
+        $raw_body = wp_remote_retrieve_body( $response );
 
-        // Log para debug completo
-        error_log( '[PhotoRoom API] HTTP Code: ' . $code );
-        error_log( '[PhotoRoom API] Body: ' . $body );
+        error_log( '[PhotoRoom API] HTTP Code: ' . $status );
+        error_log( '[PhotoRoom API] Body: ' . $raw_body );
 
-        $data = json_decode( $body, true );
-
-        if ( isset( $data['image'] ) ) {
-            return $data['image'];
+        if ( $status >= 400 ) {
+            return new \WP_Error( 'luxbg_http_' . $status, $raw_body ?: 'HTTP error ' . $status );
         }
 
-        return new \WP_Error( 'api_generate', 'Erro na API: ' . $body );
+        if ( empty( $raw_body ) ) {
+            return new \WP_Error( 'luxbg_empty_response', 'Resposta vazia da API' );
+        }
+
+        $data = json_decode( $raw_body, true );
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            return new \WP_Error( 'luxbg_invalid_format', 'Formato inválido' );
+        }
+
+        if ( ! empty( $data['image'] ) ) {
+            $image_b64 = $data['image'];
+        } elseif ( ! empty( $data['image_b64'] ) ) {
+            $image_b64 = $data['image_b64'];
+        } elseif ( ! empty( $data['image_base64'] ) ) {
+            $image_b64 = $data['image_base64'];
+        } elseif ( ! empty( $data['result_url'] ) ) {
+            $get = wp_remote_get( $data['result_url'], [ 'timeout' => 60 ] );
+            if ( is_wp_error( $get ) ) {
+                return new \WP_Error( 'luxbg_request_error', $get->get_error_message() );
+            }
+            $code   = wp_remote_retrieve_response_code( $get );
+            if ( $code >= 400 ) {
+                return new \WP_Error( 'luxbg_http_' . $code, 'HTTP error ' . $code );
+            }
+            $binary = wp_remote_retrieve_body( $get );
+            if ( empty( $binary ) ) {
+                return new \WP_Error( 'luxbg_api_error', 'Imagem vazia no result_url' );
+            }
+            return $binary;
+        } else {
+            return new \WP_Error( 'luxbg_api_error', 'Imagem não encontrada na resposta.' );
+        }
+
+        $binary = base64_decode( $image_b64 );
+        if ( false === $binary ) {
+            return new \WP_Error( 'luxbg_api_error', 'Falha ao decodificar imagem' );
+        }
+
+        return $binary;
     }
 
     public function test_connection() {
