@@ -18,7 +18,7 @@ class API_Connector {
      * evitar erros do tipo "Please provide an image".
      *
      * @param string $image_url URL da imagem original
-     * @param string $prompt    Prompt do background
+     * @param string $prompt    Background prompt
      * @return string|\WP_Error  Dados binários da imagem ou erro
      */
     public function generate_luxury_image( $image_url, $prompt = 'luxury interior' ) {
@@ -31,8 +31,8 @@ class API_Connector {
         }
 
         $body = wp_json_encode([
-            'image_url'  => $image_url,
-            'background' => $prompt,
+            'image_url'        => $image_url,
+            'background_prompt' => $prompt,
         ]);
 
         $response = wp_remote_post( $this->endpoint, [
@@ -111,8 +111,8 @@ class API_Connector {
                 'Content-Type' => 'application/json',
             ],
             'body' => wp_json_encode([
-                'image_url' => 'https://images.unsplash.com/photo-1683009427619-a1a11b799e05?auto=format&w=600',
-                'prompt'    => 'luxury interior',
+                'image_url'        => 'https://images.unsplash.com/photo-1683009427619-a1a11b799e05?auto=format&w=600',
+                'background_prompt' => 'luxury interior',
             ]),
             'timeout' => 60,
         ];
