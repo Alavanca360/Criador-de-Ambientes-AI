@@ -10,6 +10,10 @@
                 <th scope="row"><label for="luxbg_api_key">PhotoRoom API Key</label></th>
                 <td><input type="text" name="luxbg_api_key" id="luxbg_api_key" value="<?php echo esc_attr( get_option( 'luxbg_api_key' ) ); ?>" class="regular-text" /></td>
             </tr>
+            <tr valign="top">
+                <th scope="row"><label for="luxbg_endpoint">Endpoint da API</label></th>
+                <td><input type="text" name="luxbg_endpoint" id="luxbg_endpoint" value="<?php echo esc_attr( get_option( 'luxbg_endpoint', 'https://sdk.photoroom.com/v1/replace' ) ); ?>" class="regular-text" /></td>
+            </tr>
         </table>
         <?php submit_button( 'Salvar', 'primary luxbg-green' ); ?>
         <?php submit_button(); ?>

@@ -4,11 +4,12 @@ namespace LuxuryBg;
 class API_Connector {
     // Endpoint antigo que utilizava o envio da imagem em base64. Mantido por compatibilidade
     // mas o novo fluxo utiliza o endpoint /v1/replace via URL.
-    private $endpoint = 'https://sdk.photoroom.com/v1/replace';
+    private $endpoint;
     private $api_key;
 
     public function __construct() {
-        $this->api_key = get_option( 'luxbg_api_key', '' );
+        $this->api_key  = get_option( 'luxbg_api_key', '' );
+        $this->endpoint = get_option( 'luxbg_endpoint', 'https://sdk.photoroom.com/v1/replace' );
     }
 
     /**
