@@ -339,6 +339,7 @@ class Admin_Panel {
 
     public function register_settings() {
         register_setting( 'luxbg_settings', 'luxbg_api_key' );
+        register_setting( 'luxbg_settings', 'luxbg_endpoint' );
     }
 
     public function render_settings_page() {
