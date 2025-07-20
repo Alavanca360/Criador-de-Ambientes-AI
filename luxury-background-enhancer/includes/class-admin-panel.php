@@ -251,15 +251,9 @@ class Admin_Panel {
         }
 
         $path   = get_attached_file( $thumbnail_id );
-        $editor = wp_get_image_editor( $path );
-        if ( is_wp_error( $editor ) ) {
-            $this->error_logger->log( 'image_editor', $editor->get_error_message() );
-            wp_redirect( get_edit_post_link( $product_id, 'url' ) );
-            exit;
-        }
 
-        $size = $editor->get_size();
-        if ( $size['width'] == 1024 && $size['height'] == 423 ) {
+        $info = getimagesize( $path );
+        if ( $info && $info[0] == 1024 && $info[1] == 423 ) {
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
@@ -268,10 +262,9 @@ class Admin_Panel {
         $filename   = wp_unique_filename( $upload_dir['path'], 'luxbg-fixed-' . uniqid() . '.jpg' );
         $new_path   = trailingslashit( $upload_dir['path'] ) . $filename;
 
-        $editor->resize( 1024, 423, true );
-        $saved = $editor->save( $new_path );
-        if ( is_wp_error( $saved ) ) {
-            $this->error_logger->log( 'save_image', $saved->get_error_message() );
+        $this->image_processor->resize_image( $thumbnail_id, $new_path );
+        if ( ! file_exists( $new_path ) ) {
+            $this->error_logger->log( 'save_image', 'Failed to resize image' );
             wp_redirect( get_edit_post_link( $product_id, 'url' ) );
             exit;
         }
