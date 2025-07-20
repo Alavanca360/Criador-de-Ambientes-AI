@@ -75,19 +75,32 @@ class API_Connector {
         } elseif ( ! empty( $data['image_base64'] ) ) {
             $image_b64 = $data['image_base64'];
         } elseif ( ! empty( $data['result_url'] ) ) {
-            $get = wp_remote_get( $data['result_url'], [ 'timeout' => 60 ] );
-            if ( is_wp_error( $get ) ) {
-                return new \WP_Error( 'luxbg_request_error', $get->get_error_message() );
-            }
-            $code   = wp_remote_retrieve_response_code( $get );
-            if ( $code >= 400 ) {
-                return new \WP_Error( 'luxbg_http_' . $code, 'HTTP error ' . $code );
-            }
-            $binary = wp_remote_retrieve_body( $get );
-            if ( empty( $binary ) ) {
-                return new \WP_Error( 'luxbg_api_error', 'Imagem vazia no result_url' );
-            }
-            return $binary;
+            $start   = time();
+            $timeout = 20; // segundos
+
+            do {
+                $get = wp_remote_get( $data['result_url'], [ 'timeout' => 60 ] );
+                if ( is_wp_error( $get ) ) {
+                    return new \WP_Error( 'luxbg_request_error', $get->get_error_message() );
+                }
+
+                $code  = wp_remote_retrieve_response_code( $get );
+                $body  = wp_remote_retrieve_body( $get );
+
+                if ( $code >= 400 ) {
+                    return new \WP_Error( 'luxbg_http_' . $code, 'HTTP error ' . $code );
+                }
+
+                if ( ( $code === 201 || $code === 202 ) || empty( $body ) ) {
+                    if ( time() - $start >= $timeout ) {
+                        return new \WP_Error( 'luxbg_timeout', 'Tempo esgotado aguardando imagem' );
+                    }
+                    sleep( 2 );
+                    continue;
+                }
+
+                return $body;
+            } while ( true );
         } else {
             return new \WP_Error( 'luxbg_api_error', 'Imagem não encontrada na resposta.' );
         }
