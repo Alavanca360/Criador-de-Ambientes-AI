@@ -10,6 +10,6 @@ Plugin WordPress para gerar fundos de luxo em imagens de produtos usando a API P
 4. Ative o plugin no painel de administracao.
 5. Configure sua chave de API em `Configurações → Criador de Ambientes AI`.
 6. Ao editar um produto no WooCommerce, utilize a caixa "Criador de Ambientes AI" para gerar novos fundos.
-7. Use o botão **Fix Images** para redimensionar a imagem destacada do produto para 1024×423 caso ela esteja em tamanho diferente.
+7. Use o botão **Fix Images** para ajustar a imagem destacada para um canvas de 1024×423 mantendo a proporção. Barras borradas preencherão as laterais quando necessário.
 
 O plugin enviará a imagem para a API PhotoRoom e definirá a nova imagem como imagem destacada. A verificação de fundo branco não é mais necessária; qualquer imagem pode ser utilizada.
