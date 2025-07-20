@@ -103,13 +103,13 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+            error_log( '[luxbg] Warning: continuing despite failed HEAD request.' );
         } else {
-            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
-        }
-        if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
-            $this->status_tracker->set_status( $product_id, 'Erro' );
-            $this->error_logger->log( 'image_url', 'URL inacessível: ' . $image_url );
-            $this->redirect_with_message( $product_id, 'image_private' );
+            $code = wp_remote_retrieve_response_code( $head );
+            error_log( '[luxbg] HEAD status: ' . $code );
+            if ( $code >= 400 ) {
+                error_log( '[luxbg] Warning: received HTTP ' . $code . ' for HEAD request, continuing anyway.' );
+            }
         }
 
         if ( ! $this->image_processor->is_white_background( $image_path ) ) {
@@ -187,13 +187,13 @@ class Admin_Panel {
         $head = wp_remote_head( $image_url );
         if ( is_wp_error( $head ) ) {
             error_log( '[luxbg] HEAD request error: ' . $head->get_error_message() );
+            error_log( '[luxbg] Warning: continuing despite failed HEAD request.' );
         } else {
-            error_log( '[luxbg] HEAD status: ' . wp_remote_retrieve_response_code( $head ) );
-        }
-        if ( is_wp_error( $head ) || wp_remote_retrieve_response_code( $head ) >= 400 ) {
-            $this->status_tracker->set_status( $product_id, 'Erro' );
-            $this->error_logger->log( 'image_url', 'URL inacessível: ' . $image_url );
-            wp_send_json_error( $this->friendly_message( 'image_private' ) );
+            $code = wp_remote_retrieve_response_code( $head );
+            error_log( '[luxbg] HEAD status: ' . $code );
+            if ( $code >= 400 ) {
+                error_log( '[luxbg] Warning: received HTTP ' . $code . ' for HEAD request, continuing anyway.' );
+            }
         }
 
         if ( ! $this->image_processor->is_white_background( $image_path ) ) {
